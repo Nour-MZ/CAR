@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Car Model Search</title>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  </head>
+  <body>
+    <h1>Car Model Search</h1>
+    <input type="text" id="searchInput" placeholder="Search car models" />
+    <button id="searchButton">Search</button>
+    <h1>Car List</h1>
+    <table id="carList">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>MPG</th>
+                <th>Cylinders</th>
+                <th>Displacement</th>
+                <th>Horsepower</th>
+                <th>Weight</th>
+                <th>Acceleration</th>
+                <th>Year</th>
+                <th>Origin</th>
+                <th>Color</th>
+                <th>Brand</th>
+                <th>Model</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+    <h1>Search History</h1>
+    <ul id="recentSearches"></ul>
+    <h1>Recommendation</h1>
+    <ul id="recommendation"></ul>
+    <style>
+        td{ 
+            padding: 1rem;
+            background-color: pink;
+            border: 1px solid black;
+        }
+    </style>
+    <script>
+      var recentSearches = JSON.parse(localStorage.getItem("recentSearches")) || [];
+      var recommendations = JSON.parse(localStorage.getItem("recommendStorage")) || [];
+
+      function updateSearch(searchhis) {
+        document.getElementById("recentSearches").innerHTML = "";
+        searchhis.forEach(function (e) {
+          var li = document.createElement("li");
+          li.textContent = e;
+          document.getElementById("recentSearches").appendChild(li);
+        });
+      }
+
+      function updateTable(data, tableId) {
+        var tableBody = document.querySelector(tableId + ' tbody');
+        tableBody.innerHTML = '';
+        data.forEach(function(car) {
+          var row = document.createElement('tr');
+          row.innerHTML = `
+            <td>${car.name}</td>
+            <td>${car.mpg}</td>
+            <td>${car.cylinders}</td>
+            <td>${car.displacement}</td>
+            <td>${car.horsepower}</td>
+            <td>${car.weight}</td>
+            <td>${car.acceleration}</td>
+            <td>${car.year}</td>
+            <td>${car.origin}</td>
+            <td>${car.color}</td>
+            <td>${car.brand}</td>
+            <td>${car.model}</td>
+          `;
+          tableBody.appendChild(row);
+        });
+      }
+      function updateRecommend(searchhis) {
+        document.getElementById("recommendation").innerHTML = "";
+        searchhis.forEach(function (e) {
+          var li = document.createElement("li");
+          li.textContent = "Name: " + e.name + "Year:" + e.year;
+          document.getElementById("recommendation").appendChild(li);
+        });
+      }
+
+      updateRecommend(recommendations)
+      updateSearch(recentSearches);
+
+      document
+        .getElementById("searchButton")
+        .addEventListener("click", function () {
+          var searchQuery = document.getElementById("searchInput").value;
+
+          recentSearches.unshift(searchQuery);
+          recentSearches = recentSearches.slice(0, 10);
+
+          updateSearch(recentSearches);
+          localStorage.setItem(
+            "recentSearches",
+            JSON.stringify(recentSearches)
+          );
+
+          axios
+            .get("/search?query=" + searchQuery)
+            .then(function (response) {
+                var carList = response.data
+                updateTable(carList, '#carList');
+            })
+            .catch(function (error) {
+              console.error("Error fetching car models:", error);
+            });
+
+          axios
+            .get("/recommend?items=" + recentSearches)
+            .then(function (response) {
+                recommendations = response.data;
+                console.log(recommendations);
+                updateRecommend(recommendations)
+
+                localStorage.setItem(
+                    "recommendStorage",
+                    JSON.stringify(response.data)
+                );
+                console.log(response.data)
+              
+            })
+            .catch(function (error) {
+              console.error("Error fetching car models:", error);
+            });
+        });
+    </script>
+  </body>
+</html>
