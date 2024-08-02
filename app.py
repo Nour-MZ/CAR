@@ -35,6 +35,10 @@ def index():
 @app.route('/search', methods=['GET'])
 def search_cars():
     query = request.args.get('query', '')
+
+    if query == "":
+        return 
+    
     querio = query.lower().split()
     matches = []
      
