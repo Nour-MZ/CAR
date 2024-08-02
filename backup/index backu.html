@@ -48,7 +48,7 @@
               <th>Model</th>
           </tr>
       </thead>
-      <tbody></tbody>
+      <tbody id="recommendationbody"></tbody>
   </table>
     <style>
         td{ 
@@ -59,28 +59,26 @@
     </style>
     <script>
       var recentSearches = JSON.parse(localStorage.getItem("recentSearches")) || [];
-      // var recommendations = JSON.parse(localStorage.getItem("recommendStorage")) || [];
+      var recommendations = JSON.parse(localStorage.getItem("recommendStorage")) || [];
 
       function updateTable(data, tableId) {
         var tableBody = document.querySelector(tableId + ' tbody');
         tableBody.innerHTML = '';
-        console.log(data)
         data.forEach(function(car) {
-          
           var row = document.createElement('tr');
           row.innerHTML = `
-            <td>${car[Object.keys(car)[0]].name}</td>
-            <td>${car[Object.keys(car)[0]].mpg}</td>
-            <td>${car[Object.keys(car)[0]].cylinders}</td>
-            <td>${car[Object.keys(car)[0]].displacement}</td>
-            <td>${car[Object.keys(car)[0]].horsepower}</td>
-            <td>${car[Object.keys(car)[0]].weight}</td>
-            <td>${car[Object.keys(car)[0]].acceleration}</td>
-            <td>${car[Object.keys(car)[0]].year}</td>
-            <td>${car[Object.keys(car)[0]].origin}</td>
-            <td>${car[Object.keys(car)[0]].color}</td>
-            <td>${car[Object.keys(car)[0]].brand}</td>
-            <td>${car[Object.keys(car)[0]].model}</td>
+            <td>${car.name}</td>
+            <td>${car.mpg}</td>
+            <td>${car.cylinders}</td>
+            <td>${car.displacement}</td>
+            <td>${car.horsepower}</td>
+            <td>${car.weight}</td>
+            <td>${car.acceleration}</td>
+            <td>${car.year}</td>
+            <td>${car.origin}</td>
+            <td>${car.color}</td>
+            <td>${car.brand}</td>
+            <td>${car.model}</td>
           `;
           tableBody.appendChild(row);
         });
@@ -91,7 +89,7 @@
 
                   const response = await fetch(`/search?query=${encodeURIComponent(query)}`);
                   const carList = await response.json();
-                  console.log(carList)
+                  
 
                   const table = document.getElementById('carList')     
                   tableBody = document.getElementById('CarListBody')
@@ -100,6 +98,7 @@
                   carList.forEach(x=>{
                     
                     
+                  
                     var row = document.createElement('tr');
                     row.innerHTML = `
                       <td>${x.name}</td>
@@ -122,6 +121,50 @@
               }
           }
 
+
+        async function fetchrecommend(query) {
+              try {
+
+                  const response = await fetch(`/search?query=${encodeURIComponent(query)}`);
+                  const recommendList = await response.json();
+                  console.log(recommendList)
+                  
+                  localStorage.setItem(
+                    "recommendStorage",
+                    JSON.stringify(response.data)
+                  );
+
+                  const table = document.getElementById('recommendation')     
+                  tableBody = document.getElementById('recommendationbody')
+                  tableBody.innerHTML = ""
+                  
+                  recommendList.forEach(x=>{
+                    
+
+                    var row = document.createElement('tr');
+                    row.innerHTML = `
+                      <td>${x.name}</td>
+                      <td>${x.mpg}</td>
+                      <td>${x.cylinders}</td>
+                      <td>${x.displacement}</td>
+                      <td>${x.horsepower}</td>
+                      <td>${x.weight}</td>
+                      <td>${x.acceleration}</td>
+                      <td>${x.year}</td>
+                      <td>${x.origin}</td>
+                      <td>${x.color}</td>
+                      <td>${x.brand}</td>
+                      <td>${x.model}</td>
+                    `;
+                    tableBody.appendChild(row);
+
+
+                  })
+              } catch (error) {
+                  console.error('Error fetching car data:', error);
+              }
+       }
+
       function updateSearch(searchhis) {
         document.getElementById("recentSearches").innerHTML = "";
         searchhis.forEach(function (e) {
@@ -131,7 +174,7 @@
         });
       }
 
-      // updateTable(recommendations, "#recommendation")
+      updateTable(recommendations, "#recommendation")
       updateSearch(recentSearches);
 
       document
@@ -149,24 +192,14 @@
           );
 
           fetchCarData(searchQuery)
+          fetchrecommend(recommendations)
 
-          axios
-            .get("/recommend?items=" + recentSearches)
-            .then(function (response) {
-                var recommendList = response.data
-                console.log(recommendList)
-                updateTable(recommendList, '#recommendation');
-
-                localStorage.setItem(
-                    "recommendStorage",
-                    JSON.stringify(response.data)
-                );
+          
+                
                 
               
-            })
-            .catch(function (error) {
-              console.error("Error fetching car models:", error);
-            });
+            
+            
         });
     </script>
   </body>
